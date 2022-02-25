@@ -1,10 +1,10 @@
 import { FormEvent, useState } from 'react';
 import Modal from 'react-modal';
-import closeImg from '../../Assets/close.svg'
-import incomeImg from '../../Assets/entradas.svg'
-import outcomeImg from '../../Assets/saidas.svg'
-import { api } from '../../services/api';
+import { useTransactions } from '../../hooks/useTransactions';
 
+import closeImg from '../../Assets/close.svg';
+import incomeImg from '../../Assets/entradas.svg';
+import outcomeImg from '../../Assets/saidas.svg';
 
 import { Container, TransactionTypeContainer, RadioBox } from './styles';
 
@@ -15,25 +15,28 @@ interface NewTransactionModalProps {
 }
 
 export function NewTransactionModal({ isOpen, onRequestClose }: NewTransactionModalProps) {
-
-    //Criando um estado para verificar se é uma entrada ou saída
-    const [type, setType] = useState('deposit');
+    const {createTransaction} = useTransactions();
 
     const [title, setTitle] = useState('');
-    const [value, setValue] = useState(0);
+    const [amount, setAmount] = useState(0);
     const [category, setCategory] = useState('');
+    const [type, setType] = useState('deposit');
 
-    //função para e
-    function handleCreateNewTransaction(event: FormEvent) {
+    async function handleCreateNewTransaction(event: FormEvent) {
         event.preventDefault();
 
-        const data = {
+        await createTransaction({
             title,
-            value,
-            category
-        }
+            amount,
+            category, 
+            type,
+        });
 
-        api.post('/transactions', data)
+        setTitle('');
+        setAmount(0);
+        setCategory('');
+        setType('deposit');
+        onRequestClose();
     }
 
     return (
@@ -44,12 +47,12 @@ export function NewTransactionModal({ isOpen, onRequestClose }: NewTransactionMo
             className="react-modal-content"
         >
 
-            <button 
-            type="button" 
-            onClick={onRequestClose} 
-            className="react-modal-close"
+            <button
+                type="button"
+                onClick={onRequestClose}
+                className="react-modal-close"
             >
-                <img src={closeImg} alt="Fechar Modal"/>
+                <img src={closeImg} alt="Fechar Modal" />
             </button>
 
             <Container onSubmit={handleCreateNewTransaction}>
@@ -57,22 +60,22 @@ export function NewTransactionModal({ isOpen, onRequestClose }: NewTransactionMo
 
                 <input
                     placeholder="Título"
-                    value= {title}
+                    value={title}
                     onChange={event => setTitle(event.target.value)}
                 />
 
                 <input
                     type="number"
                     placeholder="valor"
-                    value= {value}
-                    onChange={event => setValue(Number(event.target.value))}
+                    value={amount}
+                    onChange={event => setAmount(Number(event.target.value))}
                 />
 
 
                 <TransactionTypeContainer>
                     <RadioBox
                         type="button"
-                        onClick={ () => { setType('deposit'); }}
+                        onClick={() => { setType('deposit'); }}
                         isActive={type === 'deposit'}
                         activeColor="green"
                     >
@@ -82,7 +85,7 @@ export function NewTransactionModal({ isOpen, onRequestClose }: NewTransactionMo
 
                     <RadioBox
                         type="button"
-                        onClick={ () => { setType('withdraw'); }}
+                        onClick={() => { setType('withdraw'); }}
                         isActive={type === 'withdraw'}
                         activeColor="red"
                     >
@@ -93,7 +96,7 @@ export function NewTransactionModal({ isOpen, onRequestClose }: NewTransactionMo
 
                 <input
                     placeholder="Categoria"
-                    value= {category}
+                    value={category}
                     onChange={event => setCategory(event.target.value)}
                 />
 
